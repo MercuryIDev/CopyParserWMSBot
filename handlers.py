@@ -24,7 +24,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, CallbackQueryHandler, MessageHandler, filters
 from config import CHAT_ID
 from storage import storage
-from utils import parse_supply_ids, format_ids_for_copy, validate_chat_id, logger, get_user_identifier
+from utils import parse_supply_ids, format_ids_for_copy, validate_chat_id, logger, get_user_identifier, is_message_after_start, format_timestamp
 from debugger import debug, MessageInfo, DebugCategory
 
 async def handle_supply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -52,6 +52,14 @@ async def handle_supply_message(update: Update, context: ContextTypes.DEFAULT_TY
         # Начало секции обработки
         debug.section_start("HANDLE SUPPLY MESSAGE", message_id)
         
+        # ===== ПРОВЕРКА СООБЩЕНИЙ ПОСЛЕ ЗАПУСКА БОТА =====
+        message_date = message.date.timestamp()
+        if not is_message_after_start(message_date):
+            debug.info_msg(f"Message was sent BEFORE bot started - skipping")
+            debug.info_msg(f"Message time: {format_timestamp(message_date)}")
+            debug.section_end()
+            return
+        
         # Выполнение очистки устаревших данных
         cleaned_count = storage.cleanup_old_data()
         if cleaned_count > 0:
@@ -66,11 +74,10 @@ async def handle_supply_message(update: Update, context: ContextTypes.DEFAULT_TY
         message_text = message.text
         chat_id = message.chat_id
         
-        # Логирование информацию о сообщении
+        # Логирование информации о сообщении
         debug.step(DebugCategory.MESSAGE, f"Processing message")
         user_identifier = get_user_identifier(message.from_user)
         debug.info_msg(f"From: {user_identifier}")
-        
         
         # Парсинг ID из текста сообщения
         ax_ids, wms_ids = parse_supply_ids(message_text)

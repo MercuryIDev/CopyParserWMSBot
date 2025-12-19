@@ -22,8 +22,9 @@ bot.py - Главный модуль запуска и конфигурации 
 """
 
 import logging
+import time
 from telegram.ext import Application, MessageHandler, CallbackQueryHandler, filters
-from config import PARSER_BOT_TOKEN, CHAT_NAME, validate_config, DEBUG_MODE
+from config import PARSER_BOT_TOKEN, CHAT_NAME, validate_config, DEBUG_MODE, BOT_START_TIME
 from handlers import (
     debug_all_messages,
     handle_user_reply_to_dispatcher,
@@ -111,6 +112,11 @@ def main():
     else:
         print("[DEBUG] Debug mode is DISABLED")
         print("[DEBUG] Only essential logs will be shown")
+        
+    # Важная информация о фильтрации сообщений
+    print(f"\n[INFO] Bot will process messages sent AFTER:")
+    print(f"[INFO] {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(BOT_START_TIME))}")
+    print(f"[INFO] Messages before this time will be ignored")
     
     # ==================== 3. СОЗДАНИЕ ЭКЗЕМПЛЯРА ПРИЛОЖЕНИЯ ====================
     """

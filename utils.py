@@ -15,7 +15,8 @@ utils.py - Вспомогательные функции бота
 
 import re
 import logging
-from config import DEBUG_MODE, AX_ID_PATTERN, WMS_ID_PATTERN, MAX_IDS_PER_MESSAGE
+import time
+from config import DEBUG_MODE, AX_ID_PATTERN, WMS_ID_PATTERN, MAX_IDS_PER_MESSAGE, BOT_START_TIME
 
 # ==================== НАСТРОЙКА ЛОГИРОВАНИЯ ====================
 # Основной логгер для ошибок и информации
@@ -158,3 +159,24 @@ def get_user_identifier(user) -> str:
     
     # Если неожиданный формат
     return "Unknown"
+
+def is_message_after_start(message_date: float) -> bool:
+    """
+    Проверяет, было ли сообщение отправлено ПОСЛЕ запуска бота
+    
+    Args:
+        message_date: Unix timestamp даты сообщения
+    
+    Returns:
+        bool: True если сообщение отправлено после запуска бота
+    """
+    # message_date - время отправки сообщения
+    # BOT_START_TIME - время запуска бота
+    # Добавляем 5 секунд буфера (на случай рассинхронизации часов)
+    return message_date > (BOT_START_TIME - 5)
+
+def format_timestamp(timestamp: float) -> str:
+    """
+    Форматирует timestamp в читаемый вид
+    """
+    return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp))
