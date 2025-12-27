@@ -100,7 +100,7 @@ async def handle_supply_message(update: Update, context: ContextTypes.DEFAULT_TY
             reply_markup = InlineKeyboardMarkup(keyboard)
             
             # Формировка текста ответа
-            status_text = "🤖 *Парсер поставок*\n\n"
+            status_text = ""
             if has_ax:
                 status_text += f"📦 ID AX: {len(ax_ids)} шт.\n"
             if has_wms:
