@@ -109,11 +109,8 @@ def format_ids_for_copy(ids: list, id_type: str) -> str:
     # Каждый ID на новой строке с дефисом
     result_text = '\n'.join([f"{id}-" for id in ids])
     
-    # Определяем название типа
-    type_name = "AX" if id_type == "ax" else "WMS"
-    
     # Форматирование в MarkdownV2
-    return f"ID {type_name} для копирования \\({len(ids)} шт\\.\\):\n```\n{result_text}\n```"
+    return f"```\n{result_text}\n```"
 
 def validate_chat_id(chat_id: int, target_chat_id: str) -> bool:
     """
