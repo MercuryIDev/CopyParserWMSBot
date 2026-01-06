@@ -22,7 +22,7 @@ handlers.py - Модуль обработчиков сообщений и кно
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, CallbackQueryHandler, MessageHandler, filters
-from config import CHAT_ID
+from config import CHAT_ID, CAR_NUM_PATTERN
 from storage import storage
 from utils import parse_supply_ids, format_ids_for_copy, validate_chat_id, logger, get_user_identifier, is_message_after_start, format_timestamp
 from debugger import debug, MessageInfo, DebugCategory
@@ -36,7 +36,7 @@ async def handle_supply_message(update: Update, context: ContextTypes.DEFAULT_TY
         2. Парсит ID AX и WMS из текста
         3. Если находит ID - создает кнопки
         4. Сохраняет данные в хранилище
-    
+
     Особенности:
         - Работает только с текстовыми сообщениями
         - Пропускает команды (filters.TEXT & ~filters.COMMAND)
@@ -106,13 +106,54 @@ async def handle_supply_message(update: Update, context: ContextTypes.DEFAULT_TY
             if has_wms:
                 status_text += f"📦 ID WMS: {len(wms_ids)} шт.\n"
             
-            # Отправка сообщения с кнопками
+            # ===== ПОИСК ТЕКСТА ДЛЯ ЦИТАТЫ =====
+            # Ищем строку с номером машины для цитирования
+            quote_text = None
+            quote_position = 0
+            
+            # Поиск в тексте сообщения номера машины
+            lines = message_text.split('\n')
+            full_text = '\n'.join(lines)  # Объединяем для поиска через строки
+            
+            # Ищем номера машин во всём тексте (теперь CAR_NUM_PATTERN - скомпилированное выражение)
+            car_match = CAR_NUM_PATTERN.search(full_text)
+            if car_match:
+                matched_text = car_match.group()
+                quote_text = matched_text
+                quote_position = car_match.start()
+                
+                # Чтобы получить номер строки:
+                line_num = full_text[:quote_position].count('\n')
+                
+                debug.info_msg(f"Found car number '{matched_text}' at line {line_num+1}, position {quote_position}")
+            
+            # Создаем параметры ответа с цитатой
+            reply_parameters = None
+            if quote_text:
+                try:
+                    # Создаем ReplyParameters с цитатой
+                    from telegram import ReplyParameters
+                    reply_parameters = ReplyParameters(
+                        message_id=message_id,
+                        quote=quote_text,
+                        quote_position=quote_position
+                    )
+                    debug.info_msg(f"Created reply parameters with quote")
+                except Exception as e:
+                    debug.error_occurred("create_reply_parameters", e)
+                    # Если не удалось создать с цитатой, используем обычный reply
+                    reply_parameters = ReplyParameters(message_id=message_id)
+            else:
+                # Если не нашли текст для цитирования, используем обычный reply
+                reply_parameters = ReplyParameters(message_id=message_id)
+            
+            # Отправка сообщения с кнопками и цитатой
             bot_message = await context.bot.send_message(
                 chat_id=chat_id,
                 text=status_text,
                 reply_markup=reply_markup,
                 parse_mode='Markdown',
-                reply_to_message_id=message_id
+                reply_parameters=reply_parameters  # Используем reply_parameters вместо reply_to_message_id
             )
             
             # Логирование создания интерфейса
