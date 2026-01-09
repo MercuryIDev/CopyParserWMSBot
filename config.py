@@ -28,7 +28,7 @@ CHAT_NAME = '[TEST] CopyParserWMSBot Sandbox'
 
 # ==================== НАСТРОЙКИ ПАРСЕРА ====================
 MAX_IDS_PER_MESSAGE = 100
-DATA_CLEANUP_INTERVAL = 43200
+DATA_CLEANUP_INTERVAL = 50400
 DEBUG_MODE = True
 
 # ==================== ВРЕМЯ ЗАПУСКА БОТА ====================
