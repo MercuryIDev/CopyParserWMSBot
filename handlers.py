@@ -111,22 +111,31 @@ async def handle_supply_message(update: Update, context: ContextTypes.DEFAULT_TY
             quote_text = None
             quote_position = 0
             
-            # Поиск в тексте сообщения номера машины
-            lines = message_text.split('\n')
-            full_text = '\n'.join(lines)  # Объединяем для поиска через строки
-            
-            # Ищем номера машин во всём тексте (теперь CAR_NUM_PATTERN - скомпилированное выражение)
-            car_match = CAR_NUM_PATTERN.search(full_text)
-            if car_match:
-                matched_text = car_match.group()
-                quote_text = matched_text
-                quote_position = car_match.start()
+            # Обработка поиска номера машины с защитой от ошибок
+            try:
+                # Поиск в тексте сообщения номера машины
+                lines = message_text.split('\n')
+                full_text = '\n'.join(lines)  # Объединяем для поиска через строки
                 
-                # Чтобы получить номер строки:
-                line_num = full_text[:quote_position].count('\n')
-                
-                debug.info_msg(f"Found car number '{matched_text}' at line {line_num+1}, position {quote_position}")
-            
+                # Ищем номера машин во всём тексте
+                car_match = CAR_NUM_PATTERN.search(full_text)
+                if car_match:
+                    matched_text = car_match.group()
+                    quote_text = matched_text
+                    quote_position = car_match.start()
+                    
+                    # Чтобы получить номер строки:
+                    line_num = full_text[:quote_position].count('\n')
+                    
+                    debug.info_msg(f"Found car number '{matched_text}' at line {line_num+1}, position {quote_position}")
+                else:
+                    debug.info_msg("No car number found in message")
+                    
+            except Exception as e:
+                # Логируем ошибку, но продолжаем работу
+                debug.error_occurred("car_number_search", e)
+                debug.info_msg("Car number search failed, continuing without quote")
+
             # Создаем параметры ответа с цитатой
             reply_parameters = None
             if quote_text:
@@ -141,40 +150,54 @@ async def handle_supply_message(update: Update, context: ContextTypes.DEFAULT_TY
                     debug.info_msg(f"Created reply parameters with quote")
                 except Exception as e:
                     debug.error_occurred("create_reply_parameters", e)
+                    debug.info_msg("Failed to create reply parameters with quote, using simple reply")
                     # Если не удалось создать с цитатой, используем обычный reply
                     reply_parameters = ReplyParameters(message_id=message_id)
             else:
                 # Если не нашли текст для цитирования, используем обычный reply
-                reply_parameters = ReplyParameters(message_id=message_id)
+                try:
+                    from telegram import ReplyParameters
+                    reply_parameters = ReplyParameters(message_id=message_id)
+                except Exception as e:
+                    debug.error_occurred("create_simple_reply_parameters", e)
+                    debug.info_msg("Failed to create simple reply parameters, sending without reply")
+                    reply_parameters = None
             
-            # Отправка сообщения с кнопками и цитатой
-            bot_message = await context.bot.send_message(
-                chat_id=chat_id,
-                text=status_text,
-                reply_markup=reply_markup,
-                parse_mode='Markdown',
-                reply_parameters=reply_parameters  # Используем reply_parameters вместо reply_to_message_id
-            )
-            
-            # Логирование создания интерфейса
-            debug.ui_created(has_ax, has_wms, bot_message.message_id)
-            
-            # Сохранение данных в хранилище
-            storage.store_data(data_key, {
-                'ax_ids': ax_ids,
-                'wms_ids': wms_ids,
-                'current_bot_message_id': bot_message.message_id,
-                'original_message_id': message_id,
-                'original_message_from': message.from_user.first_name if message.from_user else 'Unknown'
-            })
-            
-            debug.storage_action("STORED", data_key, {
-                'ax_ids_count': len(ax_ids),
-                'wms_ids_count': len(wms_ids),
-                'bot_message_id': bot_message.message_id
-            })
-            
-            debug.bot_action("MESSAGE_SENT", bot_message.message_id)
+            try:
+                # Отправка сообщения с кнопками и цитатой
+                bot_message = await context.bot.send_message(
+                    chat_id=chat_id,
+                    text=status_text,
+                    reply_markup=reply_markup,
+                    parse_mode='Markdown',
+                    reply_parameters=reply_parameters if reply_parameters else None
+                )
+                
+                # Логирование создания интерфейса
+                debug.ui_created(has_ax, has_wms, bot_message.message_id)
+                
+                # Сохранение данных в хранилище
+                storage.store_data(data_key, {
+                    'ax_ids': ax_ids,
+                    'wms_ids': wms_ids,
+                    'current_bot_message_id': bot_message.message_id,
+                    'original_message_id': message_id,
+                    'original_message_from': message.from_user.first_name if message.from_user else 'Unknown'
+                })
+                
+                debug.storage_action("STORED", data_key, {
+                    'ax_ids_count': len(ax_ids),
+                    'wms_ids_count': len(wms_ids),
+                    'bot_message_id': bot_message.message_id
+                })
+                
+                debug.bot_action("MESSAGE_SENT", bot_message.message_id)
+                
+            except Exception as e:
+                debug.error_occurred("send_message", e)
+                logger.error(f"Failed to send message: {e}")
+                # Продолжаем работу даже если не удалось отправить сообщение
+                debug.info_msg("Message sending failed, continuing...")
         
         else:
             debug.info_msg("No IDs found - skipping")
@@ -182,9 +205,10 @@ async def handle_supply_message(update: Update, context: ContextTypes.DEFAULT_TY
         debug.section_end()
         
     except Exception as e:
+        # Обрабатываем общие ошибки
         debug.error_occurred("handle_supply_message", e)
         logger.error(f"Parser error: {e}")
-
+        
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     Обработчик нажатий инлайн-кнопок
@@ -249,7 +273,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         data = storage.get_data(data_key)
         if not data:
             debug.info_msg("Data not found in storage")
-            await query.edit_message_text("Данные устарели или были очищены")
+            try:
+                await query.edit_message_text("Данные устарели или были очищены")
+            except Exception as e:
+                debug.error_occurred("edit_message_data_not_found", e)
             debug.section_end()
             return
         
@@ -263,33 +290,44 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         # Форматирование результата для копирования
         response = ""
-        if action == "ax" and ax_ids:
-            response = format_ids_for_copy(ax_ids, "ax")
-            debug.info_msg(f"Formatted {len(ax_ids)} AX IDs for copy")
-        elif action == "wms" and wms_ids:
-            response = format_ids_for_copy(wms_ids, "wms")
-            debug.info_msg(f"Formatted {len(wms_ids)} WMS IDs for copy")
-        else:
-            response = "Данные не найдены"
-            debug.info_msg("No data found for action")
+        try:
+            if action == "ax" and ax_ids:
+                response = format_ids_for_copy(ax_ids, "ax")
+                debug.info_msg(f"Formatted {len(ax_ids)} AX IDs for copy")
+            elif action == "wms" and wms_ids:
+                response = format_ids_for_copy(wms_ids, "wms")
+                debug.info_msg(f"Formatted {len(wms_ids)} WMS IDs for copy")
+            else:
+                response = "Данные не найдены"
+                debug.info_msg("No data found for action")
+        except Exception as e:
+            debug.error_occurred("format_ids", e)
+            response = "Ошибка форматирования данных"
         
-        # Замена сообщения с кнопками на результат
-        await query.edit_message_text(
-            response,
-            parse_mode='MarkdownV2'
-        )
-        
-        debug.bot_action("MESSAGE_EDITED", query.message.message_id, "Replaced buttons with results")
-        
-        # Обновление ID сообщения бота в хранилище
-        storage.update_bot_message_id(data_key, query.message.message_id)
-        debug.storage_action("UPDATED", data_key, {'new_message_id': query.message.message_id})
+        try:
+            # Замена сообщения с кнопками на результат
+            await query.edit_message_text(
+                response,
+                parse_mode='MarkdownV2'
+            )
+            
+            debug.bot_action("MESSAGE_EDITED", query.message.message_id, "Replaced buttons with results")
+            
+            # Обновление ID сообщения бота в хранилище
+            storage.update_bot_message_id(data_key, query.message.message_id)
+            debug.storage_action("UPDATED", data_key, {'new_message_id': query.message.message_id})
+            
+        except Exception as e:
+            debug.error_occurred("edit_message", e)
+            logger.error(f"Failed to edit message: {e}")
+            debug.info_msg("Message editing failed, continuing...")
         
         debug.section_end()
         
     except Exception as e:
         debug.error_occurred("button_handler", e)
         logger.error(f"Button handler error: {e}")
+        # Продолжаем работу даже при ошибке в обработчике кнопок
 
 async def handle_user_reply_to_dispatcher(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
@@ -364,6 +402,7 @@ async def handle_user_reply_to_dispatcher(update: Update, context: ContextTypes.
     except Exception as e:
         debug.error_occurred("handle_user_reply_to_dispatcher", e)
         logger.error(f"Error handling reply: {e}")
+        # Ошибка в обработчике реплаев не должна останавливать бота
 
 async def debug_all_messages(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
