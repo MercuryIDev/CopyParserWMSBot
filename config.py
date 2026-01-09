@@ -17,6 +17,7 @@ import time
 import re  
 from dotenv import load_dotenv
 
+
 # ==================== ЗАГРУЗКА ПЕРЕМЕННЫХ ОКРУЖЕНИЯ ====================
 load_dotenv()
 
@@ -27,7 +28,7 @@ CHAT_NAME = '[TEST] CopyParserWMSBot Sandbox'
 
 # ==================== НАСТРОЙКИ ПАРСЕРА ====================
 MAX_IDS_PER_MESSAGE = 100
-DATA_CLEANUP_INTERVAL = 7200
+DATA_CLEANUP_INTERVAL = 43200
 DEBUG_MODE = True
 
 # ==================== ВРЕМЯ ЗАПУСКА БОТА ====================
@@ -53,6 +54,12 @@ CAR_NUM_PATTERN = re.compile(
     re.IGNORECASE | re.UNICODE  # игнорировать регистр и работать с юникодом
 )
 
+def seconds_to_hhmm_extended(seconds):
+    """Преобразует секунды в формат ЧЧ:ММ, где ЧЧ может быть больше 24"""
+    hours = seconds // 3600
+    minutes = (seconds % 3600) // 60
+    return f"{hours:02d}:{minutes:02d}"
+
 # ==================== ВАЛИДАЦИЯ КОНФИГУРАЦИИ ====================
 def validate_config():
     """
@@ -70,4 +77,5 @@ def validate_config():
     print(f"   CHAT_ID: {CHAT_ID}")
     print(f"   DEBUG_MODE: {DEBUG_MODE}")
     print(f"   BOT_START_TIME: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(BOT_START_TIME))}")
+    print(f"   TTL: {(seconds_to_hhmm_extended(DATA_CLEANUP_INTERVAL))} h")
     return True
