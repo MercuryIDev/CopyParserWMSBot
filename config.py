@@ -54,6 +54,7 @@ CAR_NUM_PATTERN = re.compile(
     re.IGNORECASE | re.UNICODE  # игнорировать регистр и работать с юникодом
 )
 
+# ============== КОНВЕРТАЦИЯ ВРЕМЕНИ В ФОРМАТ ==============
 def seconds_to_hhmm_extended(seconds):
     """Преобразует секунды в формат ЧЧ:ММ, где ЧЧ может быть больше 24"""
     hours = seconds // 3600
