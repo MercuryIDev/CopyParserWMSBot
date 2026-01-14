@@ -36,7 +36,7 @@ DEBUG_MODE = True
 BOT_START_TIME = time.time()
 
 # ==================== РЕГУЛЯРНЫЕ ВЫРАЖЕНИЯ ====================
-AX_ID_PATTERN = r'ID AX:\s*(ЗП-37075\d{4})'
+AX_ID_PATTERN = r'ID AX:\s*(Зп-3707\d{5})'
 WMS_ID_PATTERN = r'ID WMS:\s*(0000\d{6})'
 
 
