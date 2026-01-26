@@ -27,22 +27,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def debug_print(*args, **kwargs):
-    """
-    Простая функция печати для отладки
-    
-    Использование:
-        - Для быстрой отладки в процессе разработки
-        - Альтернатива полноценному дебаггеру
-        - Управляется через DEBUG_MODE
-    
-    Примечание:
-        В основном коде используем debug из debugger.py
-        Эта функция для простых случаев
-    """
-    if DEBUG_MODE:
-        print(*args, **kwargs)
-
 def parse_supply_ids(text: str):
     """
     Парсинг ID AX и ID WMS из текста сообщения
