@@ -22,22 +22,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ==================== КОНФИГУРАЦИЯ БОТА ====================
-BOT_MODE = os.getenv('BOT_MODE', 'PROD').upper()
-
-if BOT_MODE == 'TEST':
-    # ТЕСТОВЫЙ РЕЖИМ
-    PARSER_BOT_TOKEN = os.getenv('TOKEN_TEST')
-    CHAT_ID = os.getenv('CHAT_ID_TEST')
-    CHAT_NAME = '[TEST] CopyParserWMSBot Sandbox'
-    DEBUG_MODE = True
-    print(f"[CONFIG] Running in TEST mode")
-else:
-    # ПРОДАКШЕН РЕЖИМ
-    PARSER_BOT_TOKEN = os.getenv('TOKEN_PROD')
-    CHAT_ID = os.getenv('CHAT_ID_PROD')
-    CHAT_NAME = 'PROD'
-    DEBUG_MODE = False
-    print(f"[CONFIG] Running in PROD mode")
+PARSER_BOT_TOKEN = os.getenv('CopyParserWMSBot')
+CHAT_ID = os.getenv('CHAT_ID')
+CHAT_NAME = '[TEST] CopyParserWMSBot Sandbox'
 
 # ==================== НАСТРОЙКИ ПАРСЕРА ====================
 MAX_IDS_PER_MESSAGE = 100
