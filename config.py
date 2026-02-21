@@ -25,6 +25,7 @@ load_dotenv()
 PARSER_BOT_TOKEN = os.getenv('CopyParserWMSBot')
 CHAT_ID = os.getenv('CHAT_ID')
 CHAT_NAME = '[TEST] CopyParserWMSBot Sandbox'
+DEBUG_MODE = True
 
 # ==================== НАСТРОЙКИ ПАРСЕРА ====================
 MAX_IDS_PER_MESSAGE = 100
