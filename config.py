@@ -48,7 +48,7 @@ DATA_CLEANUP_INTERVAL = 50400
 BOT_START_TIME = time.time()
 
 # ==================== РЕГУЛЯРНЫЕ ВЫРАЖЕНИЯ ====================
-AX_ID_PATTERN = r'ID AX:\s*(Зп-3707\d{5})'
+AX_ID_PATTERN = r'ID AX:\s*(Зп-\d{9})'
 WMS_ID_PATTERN = r'ID WMS:\s*(0000\d{6})'
 
 
