@@ -32,7 +32,7 @@ if BOT_MODE == 'TEST':
     DEBUG_MODE = True
     print(f"[CONFIG] Running in TEST mode")
 else:
-    # ПРОДАКШЕН РЕЖИМ (по умолчанию)
+    # ПРОДАКШЕН РЕЖИМ
     PARSER_BOT_TOKEN = os.getenv('TOKEN_PROD')
     CHAT_ID = os.getenv('CHAT_ID_PROD')
     CHAT_NAME = 'PROD'
@@ -48,7 +48,7 @@ DATA_CLEANUP_INTERVAL = 50400
 BOT_START_TIME = time.time()
 
 # ==================== РЕГУЛЯРНЫЕ ВЫРАЖЕНИЯ ====================
-AX_ID_PATTERN = r'ID AX:\s*(Зп-3707\d{5})'
+AX_ID_PATTERN = r'ID AX:\s*(Зп-\d{9})'
 WMS_ID_PATTERN = r'ID WMS:\s*(0000\d{6})'
 
 
