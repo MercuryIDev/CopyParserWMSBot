@@ -22,10 +22,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ==================== КОНФИГУРАЦИЯ БОТА ====================
-PARSER_BOT_TOKEN = os.getenv('CopyParserWMSBot')
-CHAT_ID = os.getenv('CHAT_ID')
-CHAT_NAME = '[TEST] CopyParserWMSBot Sandbox'
-DEBUG_MODE = True
+PARSER_BOT_TOKEN = os.getenv('TOKEN_PROD')
+CHAT_ID = os.getenv('CHAT_ID_PROD')
+DEBUG_MODE = False
 
 # ==================== НАСТРОЙКИ ПАРСЕРА ====================
 MAX_IDS_PER_MESSAGE = 100

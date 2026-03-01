@@ -24,7 +24,7 @@ bot.py - Главный модуль запуска и конфигурации 
 import logging
 import time
 from telegram.ext import Application, MessageHandler, CallbackQueryHandler, filters
-from config import PARSER_BOT_TOKEN, CHAT_NAME, validate_config, DEBUG_MODE, BOT_START_TIME
+from config import PARSER_BOT_TOKEN, validate_config, DEBUG_MODE, BOT_START_TIME
 from handlers import (
     debug_all_messages,
     handle_user_reply_to_dispatcher,
@@ -232,7 +232,6 @@ def main():
     """
     print("\n" + "=" * 50)
     print("Bot started successfully")
-    print(f"Waiting for messages in chat: {CHAT_NAME}")
     print("=" * 50)
     print("\n[STATUS] Bot is running...")
     print("=" * 50)
